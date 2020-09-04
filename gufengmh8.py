@@ -4,6 +4,7 @@
 # 网址：https://m.gufengmh8.com/manhua/congqianyouzuolingjianshan/
 # 版本：v1 已基本实现可以下载，就是下载速度有点慢，有待优化
 
+import os
 import requests
 import random
 import json
@@ -66,6 +67,8 @@ with open("zdaye_available.txt", "r") as f:
 contents_url = 'https://m.gufengmh8.com/manhua/congqianyouzuolingjianshan/'
 # 输出位置
 outputs = './outputs/'
+if not os.path.exists(outputs):
+    os.makedirs(outputs)
 # 随机选择一个headers
 USER_AGENT = random.choice(USER_AGENT_LIST)
 headers = {'user-agent': USER_AGENT}

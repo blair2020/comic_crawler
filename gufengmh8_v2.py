@@ -5,6 +5,7 @@
 # 版本：v2 对v1进行改进
 # 速度有所提升
 
+import os
 import requests
 import random
 import json
@@ -67,6 +68,8 @@ with open("zdaye_available.txt", "r") as f:
 contents_url = 'https://m.gufengmh8.com/manhua/congqianyouzuolingjianshan/'
 # 输出位置
 outputs = './outputs/'
+if not os.path.exists(outputs):
+    os.makedirs(outputs)
 # 随机选择一个headers
 USER_AGENT = random.choice(USER_AGENT_LIST)
 headers = {'user-agent': USER_AGENT}

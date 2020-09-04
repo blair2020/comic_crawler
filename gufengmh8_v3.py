@@ -4,6 +4,7 @@
 # 网址：https://m.gufengmh8.com/manhua/congqianyouzuolingjianshan/
 # 版本：v3 对v2增加多线程
 
+import os
 import requests
 import random
 import json
@@ -139,6 +140,8 @@ class Spider(threading.Thread):
 contents_url = 'https://m.gufengmh8.com/manhua/congqianyouzuolingjianshan/'
 # 输出位置
 outputs = './outputs/'
+if not os.path.exists(outputs):
+    os.makedirs(outputs)
 # 随机选择一个headers
 USER_AGENT0 = random.choice(USER_AGENT_LIST)
 headers0 = {'user-agent': USER_AGENT0}
