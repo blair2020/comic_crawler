@@ -21,10 +21,11 @@ for line in open('zdaye.txt', 'r', encoding='UTF-8'):
     try:
         res = requests.get("https://m.gufengmh8.com/", headers=headers, proxies=proxies, timeout=3)
         print(IP_PORT, 'is good!')
-        proxies_pool.append(proxies)
+        proxies_pool.append(proxies['http'].split('//')[1])
     except Exception as e:
         print('timeout or wrong, sorry')
 print('-' * 20)
+proxies_pool = list(set(proxies_pool))
 print('可用代理的数量：', len(proxies_pool))
 # 将可用的代理保存到zdaye_available.txt
 with open('zdaye_available.txt', 'w') as file:

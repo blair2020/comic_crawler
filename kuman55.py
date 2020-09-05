@@ -75,6 +75,7 @@ class Spider(threading.Thread):
             headers = {'user-agent': USER_AGENT}
             # 先随机选择一个代理，不出意外是下载一章换一个代理
             proxies = random.choice(proxies_pool)
+            proxies = {"http": "http://" + proxies, "https": "http://" + proxies}
             # 写个死循环让这一章的漫画都下载完
             while True:
                 try:
@@ -89,7 +90,7 @@ class Spider(threading.Thread):
                         # 如果时间很短，说明代理很好，将其添加到代理池中，虽然重复了，但随机到它的概率大了
                         if time.time() - start < 2:
                             try:
-                                proxies_pool.append(proxies)
+                                proxies_pool.append(proxies['http'].split('//')[1])
                             except Exception as e:
                                 print('添加失败')
                     break
@@ -105,7 +106,7 @@ class Spider(threading.Thread):
                             print(i_chapter, num + 1, chapter_name, 'is download__try2, time:', time.time() - start)
                             if time.time() - start < 2:
                                 try:
-                                    proxies_pool.append(proxies)
+                                    proxies_pool.append(proxies['http'].split('//')[1])
                                 except Exception as e:
                                     print('添加失败')
                         break
@@ -121,13 +122,13 @@ class Spider(threading.Thread):
                                 print(i_chapter, num + 1, chapter_name, 'is download__try3, time:', time.time() - start)
                                 if time.time() - start < 2:
                                     try:
-                                        proxies_pool.append(proxies)
+                                        proxies_pool.append(proxies['http'].split('//')[1])
                                     except Exception as e:
                                         print('添加失败')
                             break
                         except Exception as e:
                             try:  # 已经给了这个代理三次机会了，太不争气了，从代理池中删除他
-                                proxies_pool.remove(proxies)
+                                proxies_pool.remove(proxies['http'].split('//')[1])
                                 print('remove because _chapter_:', proxies, 'len(proxies_pool):', len(proxies_pool))
                             except Exception as e:
                                 if len(proxies_pool) == 0:
@@ -140,6 +141,7 @@ class Spider(threading.Thread):
                                 USER_AGENT = random.choice(USER_AGENT_LIST)
                                 headers = {'user-agent': USER_AGENT}
                                 proxies = random.choice(proxies_pool)
+                                proxies = {"http": "http://" + proxies, "https": "http://" + proxies}
                                 # print('new proxies:', proxies)
                                 continue
 
@@ -161,7 +163,7 @@ class Spider(threading.Thread):
                         break
                     except Exception as e:
                         try:  # 已经给了这个代理三次机会了，太不争气了，从代理池中删除它
-                            proxies_pool.remove(proxies)
+                            proxies_pool.remove(proxies['http'].split('//')[1])
                             print('remove because *picture*:', proxies, 'len(proxies_pool):', len(proxies_pool))
                         except Exception as e:
                             if len(proxies_pool) == 0:
@@ -174,6 +176,7 @@ class Spider(threading.Thread):
                             USER_AGENT = random.choice(USER_AGENT_LIST)
                             headers = {'user-agent': USER_AGENT}
                             proxies = random.choice(proxies_pool)
+                            proxies = {"http": "http://" + proxies, "https": "http://" + proxies}
                             # print('new proxies:', proxies)
                             continue
         with open(outputs + '{0:0>3}_{1:0>2}_{2}.jpg'.format(i_chapter, int(page), chapter_name), 'wb') as file:
@@ -181,7 +184,8 @@ class Spider(threading.Thread):
 
 
 # 漫画id，想下载该网站其他漫画只需要修改此处即可,其他的不用修改
-comic_id = 12168
+# comic_id = 12168
+comic_id = 21977
 # 漫画目录页，但目录只有20个，不全
 contents_url = f'http://m.kuman55.com/{comic_id}/'
 # 点击查看更多加载的剩余的目录

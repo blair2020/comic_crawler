@@ -14,12 +14,13 @@ if os.path.exists("zdaye_available.txt"):
     with open("zdaye_available.txt", "r") as f:
         proxies_pool = json.load(f)
     for proxy in proxies_pool:
+        proxies = {"http": "http://" + proxy, "https": "http://" + proxy}
         try:
-            res = requests.get(test_url, headers=headers, proxies=proxy, timeout=3)
+            res = requests.get(test_url, headers=headers, proxies=proxies, timeout=3)
             print(proxy, 'is good!')
         except Exception as e:
             print('timeout or wrong, remove proxy')
-            proxies_pool.remove(proxy)
+            proxies_pool.remove(proxies['http'].split('//')[1])
     new_proxies_pool = proxies_pool
 else:
     print('不存在zdaye_available.txt')
@@ -41,10 +42,11 @@ for line in open('zdaye.txt', 'r', encoding='UTF-8'):
     try:
         res = requests.get(test_url, headers=headers, proxies=proxies, timeout=3)
         print(IP_PORT, 'is good!')
-        new_proxies_pool.append(proxies)
+        new_proxies_pool.append(proxies['http'].split('//')[1])
     except Exception as e:
         print('timeout or wrong, sorry')
 print('-' * 20)
+new_proxies_pool = list(set(new_proxies_pool))
 print('可用代理的数量：', len(new_proxies_pool))
 # 将可用的代理保存到zdaye_available.txt
 with open('zdaye_available.txt', 'w') as file:

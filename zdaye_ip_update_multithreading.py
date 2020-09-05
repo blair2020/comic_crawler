@@ -9,11 +9,11 @@ import json
 import threading
 from queue import Queue
 
-
 # 测试代理的网址
 test_url = 'http://m.kuman55.com/'
 # 从浏览器粘贴的headers
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
 
 
 class TestOldProxies(threading.Thread):
@@ -29,7 +29,7 @@ class TestOldProxies(threading.Thread):
             try:
                 res = requests.get(test_url, headers=headers, proxies=test_proxies, timeout=3)
                 print(test_proxies, 'is good!')
-                new_proxies_pool.append(test_proxies)
+                new_proxies_pool.append(test_proxies['http'].split('//')[1])
             except Exception as e:
                 print('timeout or wrong,remove')
 
@@ -47,7 +47,7 @@ class TestProxies(threading.Thread):
             try:
                 res = requests.get(test_url, headers=headers, proxies=test_proxies, timeout=3)
                 print(test_proxies, 'is good!')
-                new_proxies_pool.append(proxies)
+                new_proxies_pool.append(proxies['http'].split('//')[1])
             except Exception as e:
                 print('timeout or wrong, sorry')
 
@@ -59,7 +59,11 @@ if os.path.exists("zdaye_available.txt"):
     with open("zdaye_available.txt", "r") as f:
         proxies_pool = json.load(f)
     for proxy in proxies_pool:
-        old_proxies_queue.put(proxy)
+        proxy2 = {
+            "http": "http://" + proxy,
+            "https": "http://" + proxy,
+        }
+        old_proxies_queue.put(proxy2)
     old_threads = []
     # 起50个线程
     for i in range(50):
@@ -70,8 +74,8 @@ if os.path.exists("zdaye_available.txt"):
         thread.join()
 else:
     print('不存在zdaye_available.txt')
+new_proxies_pool = list(set(new_proxies_pool))
 print('=' * 30, 'old proxies num:', len(new_proxies_pool))
-
 
 # 对新的代理进行验证
 proxies_queue = Queue(1000)
@@ -90,6 +94,7 @@ for k in range(100):
     threads.append(thread)
 for thread in threads:
     thread.join()
+new_proxies_pool = list(set(new_proxies_pool))
 
 print('-' * 20)
 print('可用代理的数量：', len(new_proxies_pool))
@@ -101,4 +106,3 @@ print('Finish')
 # with open("zdaye_available.txt", "r") as f:
 #     Dict = json.load(f)
 #     print(Dict)
-

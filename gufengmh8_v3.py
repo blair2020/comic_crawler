@@ -73,7 +73,12 @@ class Spider(threading.Thread):
             USER_AGENT = random.choice(USER_AGENT_LIST)
             headers = {'user-agent': USER_AGENT}
             # 先随机选择一个代理，不出意外是下载一章换一个代理
-            proxies = random.choice(proxies_pool)
+            # proxies = random.choice(proxies_pool)
+            proxies = proxies_pool[0]
+            proxies = {
+                "http": "http://" + proxies,
+                "https": "http://" + proxies,
+            }
             # 因为不确定每个章节有多少页，写个死循环
             while True:
                 comic_url = chapter_url.replace('.html', '-{}.html'.format(page))
@@ -103,7 +108,7 @@ class Spider(threading.Thread):
                                 break
                             except Exception as e:  # 给了三次机会，仍然不行就删掉
                                 try:
-                                    proxies_pool.remove(proxies)
+                                    proxies_pool.remove(proxies['http'].split('//')[1])
                                     print('remove:', proxies, 'len(proxies_pool):', len(proxies_pool))
                                 except Exception as e:
                                     if len(proxies_pool) == 0:
@@ -114,6 +119,10 @@ class Spider(threading.Thread):
                                     USER_AGENT = random.choice(USER_AGENT_LIST)
                                     headers = {'user-agent': USER_AGENT}
                                     proxies = random.choice(proxies_pool)
+                                    proxies = {
+                                        "http": "http://" + proxies,
+                                        "https": "http://" + proxies,
+                                    }
                                     print('new proxies:', proxies)
                                     continue
                                 if len(proxies_pool) == 0:
@@ -124,6 +133,10 @@ class Spider(threading.Thread):
                                 USER_AGENT = random.choice(USER_AGENT_LIST)
                                 headers = {'user-agent': USER_AGENT}
                                 proxies = random.choice(proxies_pool)
+                                proxies = {
+                                    "http": "http://" + proxies,
+                                    "https": "http://" + proxies,
+                                }
                                 print('new proxies:', proxies)
                                 continue
                 print(page, image_url, signal)

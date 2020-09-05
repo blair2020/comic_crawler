@@ -100,6 +100,10 @@ for i, chapter in enumerate(chapters):
     headers = {'user-agent': USER_AGENT}
     # 先随机选择一个代理，不出意外是下载一章换一个代理
     proxies = random.choice(proxies_pool)
+    proxies = {
+        "http": "http://" + proxies,
+        "https": "http://" + proxies,
+    }
     # 因为不确定每个章节有多少页，写个死循环
     while True:
         comic_url = chapter_url1.replace('.html', '-{}.html'.format(page))
@@ -131,7 +135,7 @@ for i, chapter in enumerate(chapters):
                         signal = response_etree.xpath('//div[@id="action"]/ul/li[3]/a/@href')[0]
                         break
                     except Exception as e:  # 给了三次机会，仍然不行就删掉
-                        proxies_pool.remove(proxies)
+                        proxies_pool.remove(proxies['http'].split('//')[1])
                         print('remove:', proxies, 'len(proxies_pool):', len(proxies_pool))
                         if len(proxies_pool) == 0:
                             print('当前代理池为空，运行程序前请准备足够的代理池')
@@ -141,6 +145,10 @@ for i, chapter in enumerate(chapters):
                         USER_AGENT = random.choice(USER_AGENT_LIST)
                         headers = {'user-agent': USER_AGENT}
                         proxies = random.choice(proxies_pool)
+                        proxies = {
+                            "http": "http://" + proxies,
+                            "https": "http://" + proxies,
+                        }
                         print('new proxies:', proxies)
                         continue
         print(page, image_url, signal)
@@ -151,9 +159,6 @@ for i, chapter in enumerate(chapters):
         if signal == 'javascript:SinTheme.nextChapter();':
             break
         page += 1
-# 保存一下代理池，都是优质代理
-with open('zdaye_available_good.txt', 'w') as file:
-    json.dump(proxies_pool, file)
-print('Finish')
+
 
 

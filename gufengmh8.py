@@ -101,7 +101,11 @@ for i, chapter in enumerate(chapters):
         USER_AGENT = random.choice(USER_AGENT_LIST)
         headers = {'user-agent': USER_AGENT}
         while True:
-            proxies = random.choice(proxies_pool)
+            proxies0 = random.choice(proxies_pool)
+            proxies = {
+                "http": "http://" + proxies0,
+                "https": "http://" + proxies0,
+            }
             try:
                 res = requests.get("https://m.gufengmh8.com/", headers=headers, proxies=proxies, timeout=3)
                 response = requests.get(comic_url, headers=headers, proxies=proxies)
