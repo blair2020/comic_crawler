@@ -12,6 +12,7 @@ from lxml import etree
 import threading
 from queue import LifoQueue
 import base64
+import openpyxl
 
 # headers，访问头部信息
 USER_AGENT_LIST = [
@@ -56,6 +57,13 @@ with open("zdaye_available.txt", "r") as f:
     proxies_pool = json.load(f)
 print(len(proxies_pool))
 
+# 判断一下表格是否已经存在，不存在就新建一个
+if not os.path.exists('error.xlsx'):
+    wb = openpyxl.Workbook()
+else:
+    wb = openpyxl.load_workbook('error.xlsx')
+ws = wb.active
+
 
 class Spider(threading.Thread):
     def __init__(self, *args, **kwargs):
@@ -77,9 +85,13 @@ class Spider(threading.Thread):
             proxies = random.choice(proxies_pool)
             proxies = {"http": "http://" + proxies, "https": "http://" + proxies}
             # 写个死循环让这一章的漫画都下载完
+            chapter_start = time.time()
             while True:
+                if time.time() - chapter_start > 1:
+                    ws.append((i_chapter, chapter_name, chapter_url))
+                    break
                 try:
-                    response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=4)
+                    response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=3)
                     response_etree = etree.HTML(response.text)
                     image_url_base64 = response_etree.xpath('/html/body/script[2]/text()')[0].split('\'')[-2]
                     image_url_list = json.loads(base64.b64decode(image_url_base64).decode("utf-8").replace('\/', '/').replace('\\r', ''))
@@ -96,7 +108,7 @@ class Spider(threading.Thread):
                     break
                 except Exception as e:
                     try:
-                        response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=6)
+                        response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=1)
                         response_etree = etree.HTML(response.text)
                         image_url_base64 = response_etree.xpath('/html/body/script[2]/text()')[0].split('\'')[-2]
                         image_url_list = json.loads(base64.b64decode(image_url_base64).decode("utf-8").replace('\/', '/').replace('\\r', ''))
@@ -112,7 +124,7 @@ class Spider(threading.Thread):
                         break
                     except Exception as e:
                         try:
-                            response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=8)
+                            response = requests.get(chapter_url, headers=headers, proxies=proxies, timeout=1)
                             response_etree = etree.HTML(response.text)
                             image_url_base64 = response_etree.xpath('/html/body/script[2]/text()')[0].split('\'')[-2]
                             image_url_list = json.loads(base64.b64decode(image_url_base64).decode("utf-8").replace('\/', '/').replace('\\r', ''))
@@ -149,17 +161,30 @@ class Spider(threading.Thread):
         global proxies_pool
         page, one_picture_url = one_picture.split('|')
         # 写个死循环确保这张漫画下载完成
+        this_picture_start = time.time()
         while True:
+            if time.time() - this_picture_start > 0.1:  # 下载一张图片的时间过长
+                ws.append((i_chapter, chapter_name, page, one_picture_url))
+                print(i_chapter, chapter_name, page, one_picture_url, '下载时间过长!!')
+                break
             try:
-                image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=4)
+                image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=1)
+                with open(outputs + '{0:0>3}_{1:0>2}_{2}.jpg'.format(i_chapter, int(page), chapter_name), 'wb') as file:
+                    file.write(image.content)
                 break
             except Exception as e:
                 try:
-                    image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=6)
+                    image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=1)
+                    with open(outputs + '{0:0>3}_{1:0>2}_{2}.jpg'.format(i_chapter, int(page), chapter_name),
+                              'wb') as file:
+                        file.write(image.content)
                     break
                 except Exception as e:
                     try:
-                        image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=8)
+                        image = requests.get(one_picture_url, headers=headers, proxies=proxies, timeout=1)
+                        with open(outputs + '{0:0>3}_{1:0>2}_{2}.jpg'.format(i_chapter, int(page), chapter_name),
+                                  'wb') as file:
+                            file.write(image.content)
                         break
                     except Exception as e:
                         try:  # 已经给了这个代理三次机会了，太不争气了，从代理池中删除它
@@ -179,13 +204,11 @@ class Spider(threading.Thread):
                             proxies = {"http": "http://" + proxies, "https": "http://" + proxies}
                             # print('new proxies:', proxies)
                             continue
-        with open(outputs + '{0:0>3}_{1:0>2}_{2}.jpg'.format(i_chapter, int(page), chapter_name), 'wb') as file:
-            file.write(image.content)
 
 
 # 漫画id，想下载该网站其他漫画只需要修改此处即可,其他的不用修改
 # comic_id = 12168
-comic_id = 21977
+comic_id = 22323
 # 漫画目录页，但目录只有20个，不全
 contents_url = f'http://m.kuman55.com/{comic_id}/'
 # 点击查看更多加载的剩余的目录
@@ -226,6 +249,12 @@ for j, chapter in enumerate(rest_response):
     chapters_name_url_queue.put((rest_num - j, chapter_name_, chapter_url1))
 queueLock = threading.Lock()
 # 起10个线程
+threads = []
 for k in range(20):
     thread = Spider()
     thread.start()
+    threads.append(thread)
+for thread in threads:
+    thread.join()
+wb.save('error.xlsx')
+print('Finish')
